@@ -2,13 +2,13 @@ import os
 import pandas as pd
 from yahoo_fin import stock_info as si
 from concurrent.futures import ThreadPoolExecutor
-import re
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
 
-def read_input_file(input_file):
+def read_input_file(input_file) -> list[str]:
     with open(input_file, 'r', encoding='utf-8-sig') as file:
         timestamps = file.read().splitlines()
 
@@ -17,10 +17,11 @@ def read_input_file(input_file):
     return cleaned_timestamps
 
 
-def clean_timestamp(timestamp):
-    cleaned_timestamp = re.sub(r'[^\x20-\x7E]', '', timestamp).strip()
-    cleaned_timestamp = re.sub(r'\.\d+', '', cleaned_timestamp)
-    return cleaned_timestamp
+def clean_timestamp(timestamp) -> str:
+    format_string = "%Y-%m-%d %H:%M:%S"
+    parsed_datetime = datetime.strptime(timestamp[:-7], format_string)
+
+    return str(parsed_datetime)
 
 
 def fetch_stock_data(timestamp, ticker):
@@ -41,12 +42,12 @@ def fetch_stock_data(timestamp, ticker):
         return [timestamp, ticker, None]
 
 
-def write_to_csv(results, output_file):
+def write_to_csv(results, output_file) -> None:
     df = pd.DataFrame(results, columns=["timestamp", "stock", "percentage_change"])
     df.to_csv(output_file, index=False)
 
 
-def main():
+def main() -> None:
     amazon_file = os.getenv('AMAZON_DATES')
     google_file = os.getenv('GOOGLE_DATES')
     bitcoin_file = os.getenv('BITCOIN_DATES')
